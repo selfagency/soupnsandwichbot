@@ -5,7 +5,6 @@ const Entities = require('html-entities').XmlEntities
 const fs = require('fs')
 const is = require('typa')
 const Mastodon = require('mastodon-api')
-const path = require('path')
 const striptags = require('striptags')
 const tabletojson = require('tabletojson')
 
@@ -124,7 +123,11 @@ async function upload(imgs) {
           file: fs.createReadStream(img)
         })
         console.log(JSON.stringify(res.data))
-        out.push(res.data.id)
+        if (/missing/g.test(res.data.url)) {
+          out.push(undefined)
+        } else {
+          out.push(res.data.id)
+        }
       }
     }
   } catch (err) {
@@ -161,11 +164,11 @@ async function post(soups, sandwiches) {
     }`
     console.log(`status: ${status}`)
 
-    // const res = await M.post('statuses', { status, media_ids })
-    // if (/error/.test(res.data)) console.log(res.data)
-    // setTimeout(async () => {
-    //   await post(soups, sandwiches)
-    // }, 3600000)
+    const res = await M.post('statuses', { status, media_ids })
+    if (/error/.test(res.data)) console.log(res.data)
+    setTimeout(async () => {
+      await post(soups, sandwiches)
+    }, 43200000)
   } catch (err) {
     throw err
   }
