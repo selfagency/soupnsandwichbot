@@ -93,7 +93,7 @@ async function getImg(img) {
           url: `https://${img}`,
           method: 'get'
         }).then(response => {
-          console.log(`filename: ${typeof filename} ${filename}`)
+          // console.log(`filename: ${typeof filename} ${filename}`)
           response.data.pipe(fs.createWriteStream(filename))
           return filename
         })
@@ -115,14 +115,14 @@ async function upload(imgs) {
     for (let i = 0; i <= imgs.length; i++) {
       if (i === imgs.length) return out
       const img = imgs[i]
-      console.log(`stream: ${img}`)
+      // console.log(`stream: ${img}`)
 
       if (!is.bad(img)) {
-        console.log(`file exists: ${fs.existsSync(img)}`)
+        // console.log(`file exists: ${fs.existsSync(img)}`)
         const res = await M.post('media', {
           file: fs.createReadStream(img)
         })
-        console.log(JSON.stringify(res.data))
+        // console.log(JSON.stringify(res.data))
         if (/missing/g.test(res.data.url)) {
           out.push(undefined)
         } else {
@@ -153,9 +153,9 @@ async function post(soups, sandwiches) {
     const [sand, sandImg] = getFood(sandwiches)
     const imgIn = [soupImg, sandImg]
     const imgOut = await Promise.all([getImg(imgIn[0]), getImg(imgIn[1])])
-    console.log(`imgOut: ${imgOut}`)
+    // console.log(`imgOut: ${imgOut}`)
     const media_ids = await upload(imgOut)
-    console.log(`media_ids: ${media_ids}`)
+    // console.log(`media_ids: ${media_ids}`)
 
     const status = `🥣  ${txtFilter(soup.Name)}${
       is.bad(soup.Origin) ? '' : ' [' + txtFilter(soup.Origin) + ']'
