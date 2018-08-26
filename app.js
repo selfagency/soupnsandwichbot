@@ -1,9 +1,11 @@
-require('envkey')
+require('dotenv').config()
+
 const axios = require('axios')
 const Entities = require('html-entities').XmlEntities
 const fs = require('fs')
 const is = require('typa')
 const Mastodon = require('mastodon-api')
+const path = require('path')
 const striptags = require('striptags')
 const tabletojson = require('tabletojson')
 
@@ -72,18 +74,18 @@ async function getImg(img) {
 
       if (!is.bad(ext)) {
         ext = ext[1].toLowerCase()
-        console.log(`ext: ${ext}`)
+        // console.log(`ext: ${ext}`)
       } else {
         return null
       }
 
       if (is.str(ext)) {
-        console.log(`img_in: ${img}`)
+        // console.log(`img_in: ${img}`)
         img = img
           .replace(/thumb\//g, '')
           .replace(/(\/\d*px-)/g, '/')
-          .replace(/\/[a-zA-Z0-9%$!#^&()_.-]*.{3}$/, '')
-        console.log(`img_out: ${img}`)
+          .replace(/\/[a-zA-Z0-9%$!#^&()_.-]*.{3,4}$/, '')
+        // console.log(`img_out: ${img}`)
 
         filename = `./img/${img.replace(/\/|\./g, '_')}.${ext}`
         if (fs.exists(filename)) return filename
@@ -94,7 +96,6 @@ async function getImg(img) {
           method: 'get'
         }).then(response => {
           response.data.pipe(fs.createWriteStream(filename))
-          console.log(`filename: ${filename}`)
           return filename
         })
       } else {
@@ -108,40 +109,73 @@ async function getImg(img) {
   }
 }
 
+// upload media
+async function upload(imgs) {
+  let out = []
+  try {
+    for (let i = 0; i <= imgs.length; i++) {
+      if (i === imgs.length) return out
+      const img = imgs[i]
+      console.log(`stream: ${img}`)
+
+      if (!is.bad(img)) {
+        console.log(`file exists: ${fs.existsSync(img)}`)
+        const res = await M.post('media', {
+          file: fs.createReadStream(img)
+        })
+        console.log(JSON.stringify(res.data))
+        out.push(res.data.id)
+      }
+    }
+  } catch (err) {
+    throw err
+  }
+}
+
+// filter text
+function txtFilter(text) {
+  return striptags(
+    entities
+      .decode(text)
+      .replace(/\[.*\]/, '')
+      .replace(/\n/, '')
+  )
+}
+
 // generate post
 async function post(soups, sandwiches) {
-  // console.log('Creating post')
-  const [soup, soupImg] = getFood(soups)
-  const [sand, sandImg] = getFood(sandwiches)
-  const imgIn = [soupImg, sandImg]
-  const imgOut = await Promise.all([getImg(imgIn[0]), getImg(imgIn[1])])
-  // console.log(`imgOut: ${imgOut}`)
+  try {
+    // console.log('Creating post')
+    const [soup, soupImg] = getFood(soups)
+    const [sand, sandImg] = getFood(sandwiches)
+    const imgIn = [soupImg, sandImg]
+    const imgOut = await Promise.all([getImg(imgIn[0]), getImg(imgIn[1])])
+    console.log(`imgOut: ${imgOut}`)
+    const media_ids = await upload(imgOut)
+    console.log(`media_ids: ${media_ids}`)
 
-  const status = `🥣  ${striptags(
-    entities.decode(soup.Name).replace(/\[.*\]/, '')
-  )} ${
-    is.bad(soup.Origin)
-      ? ''
-      : '[' +
-        striptags(entities.decode(soup.Origin).replace(/\[.*\]/, '')) +
-        ']'
-  } n' 🥪  ${striptags(entities.decode(sand.Name).replace(/\[.*\]/, ''))} ${
-    is.bad(sand.Origin)
-      ? ''
-      : '[' +
-        striptags(entities.decode(sand.Origin).replace(/\[.*\]/, '')) +
-        ']'
-  }`
-  console.log(`status: ${status}`)
+    const status = `🥣  ${txtFilter(soup.Name)}${
+      is.bad(soup.Origin) ? '' : ' [' + txtFilter(soup.Origin) + ']'
+    } n' 🥪  ${txtFilter(sand.Name)}${
+      is.bad(sand.Origin) ? '' : ' [' + txtFilter(sand.Origin) + ']'
+    }`
+    console.log(`status: ${status}`)
 
-  // const res = await M.post('statuses', { status })
-  // if (/error/.test(res.data)) console.log(res.data)
-  // setTimeout(async () => {
-  //   await post()
-  // }, 3600000)
+    // const res = await M.post('statuses', { status, media_ids })
+    // if (/error/.test(res.data)) console.log(res.data)
+    // setTimeout(async () => {
+    //   await post(soups, sandwiches)
+    // }, 3600000)
+  } catch (err) {
+    throw err
+  }
 }
 
 ;(async () => {
-  const [soups, sandwiches] = await warmUp()
-  await post(soups, sandwiches)
+  try {
+    const [soups, sandwiches] = await warmUp()
+    await post(soups, sandwiches)
+  } catch (err) {
+    throw err
+  }
 })()
