@@ -86,15 +86,15 @@ async function getImg(img) {
           .replace(/(\/\d*px-)/g, '/')
           .replace(/\/[a-zA-Z0-9%$!#^&()_.-]*.{3,4}$/, '')
         // console.log(`img_out: ${img}`)
-
         filename = `./img/${img.replace(/\/|\./g, '_')}.${ext}`
-        if (fs.exists(filename)) return filename
+        if (fs.existsSync(filename)) return filename
 
         return axios({
           responseType: 'stream',
           url: `https://${img}`,
           method: 'get'
         }).then(response => {
+          console.log(`filename: ${typeof filename} ${filename}`)
           response.data.pipe(fs.createWriteStream(filename))
           return filename
         })
