@@ -51,8 +51,8 @@ async function warmUp() {
 // get random food item
 function getFood(food) {
   // console.log('Getting food item')
-  const urlRegex = new RegExp(/(?:src=\"\/\/)(.*?)(?:\")/g)
   try {
+    const urlRegex = new RegExp(/(?:src=\"\/\/)(.*?)(?:\")/g)
     const item = food[Math.floor(Math.random() * food.length)]
     const img = urlRegex.exec(item.Image)
     return [item, !is.bad(img) ? img[1] : null]
@@ -166,7 +166,7 @@ async function post(soups, sandwiches) {
     }`
 
     const res = await M.post('statuses', { status, media_ids })
-    if (/error/.test(res.data)) console.log(res.data)
+    if (/error/.test(res.data)) throw new Error(res.data)
     return status
   } catch (err) {
     throw err
