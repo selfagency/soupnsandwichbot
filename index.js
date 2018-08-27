@@ -23,8 +23,7 @@ function tab2json(url) {
   try {
     return new Promise(async (resolve, reject) => {
       let data = await axios.get(url)
-      data = data.data
-      data = tabletojson.convert(data, {
+      data = tabletojson.convert(data.data, {
         stripHtmlFromCells: false,
         stripHtmlFromHeadings: true
       })
@@ -38,7 +37,7 @@ function tab2json(url) {
 
 // initialize bot
 async function warmUp() {
-  console.log('Getting soups and sandwiches')
+  // console.log('Getting soups and sandwiches')
   try {
     return Promise.all([
       await tab2json('https://en.wikipedia.org/wiki/List_of_soups'),
@@ -51,7 +50,7 @@ async function warmUp() {
 
 // get random food item
 function getFood(food) {
-  console.log('Getting food item')
+  // console.log('Getting food item')
   const urlRegex = new RegExp(/(?:src=\"\/\/)(.*?)(?:\")/g)
   try {
     const item = food[Math.floor(Math.random() * food.length)]
@@ -68,24 +67,24 @@ async function getImg(img) {
     const extRegex = new RegExp(/(?:\.)([0-9a-z]+$)/)
     let ext, filename
 
-    console.log(`img: ${img}`)
+    // console.log(`img: ${img}`)
     if (is.str(img)) {
       ext = extRegex.exec(img)
 
       if (!is.bad(ext)) {
         ext = ext[1].toLowerCase()
-        console.log(`ext: ${ext}`)
+        // console.log(`ext: ${ext}`)
       } else {
         return null
       }
 
       if (is.str(ext)) {
-        console.log(`img_in: ${img}`)
+        // console.log(`img_in: ${img}`)
         img = img
           .replace(/thumb\//g, '')
           .replace(/(\/\d*px-)/g, '/')
           .replace(/\/[a-zA-Z0-9%$!#^&()_.-]*.{3,4}$/, '')
-        console.log(`img_out: ${img}`)
+        // console.log(`img_out: ${img}`)
         filename = `/tmp/${img.replace(/\/|\./g, '_')}.${ext}`
         if (fs.existsSync(filename)) return filename
 
@@ -94,7 +93,7 @@ async function getImg(img) {
           url: `https://${img}`,
           method: 'get'
         }).then(response => {
-          console.log(`filename: ${typeof filename} ${filename}`)
+          // console.log(`filename: ${typeof filename} ${filename}`)
           response.data.pipe(fs.createWriteStream(filename))
           return filename
         })
@@ -116,14 +115,14 @@ async function upload(imgs) {
     for (let i = 0; i <= imgs.length; i++) {
       if (i === imgs.length) return out
       const img = imgs[i]
-      console.log(`stream: ${img}`)
+      // console.log(`stream: ${img}`)
 
       if (!is.bad(img)) {
-        console.log(`file exists: ${fs.existsSync(img)}`)
+        // console.log(`file exists: ${fs.existsSync(img)}`)
         const res = await M.post('media', {
           file: fs.createReadStream(img)
         })
-        console.log(JSON.stringify(res.data))
+        // console.log(JSON.stringify(res.data))
         if (/missing/g.test(res.data.url)) {
           out.push(undefined)
         } else {
@@ -149,16 +148,16 @@ function txtFilter(text) {
 // generate post
 async function post(soups, sandwiches) {
   try {
-    console.log('Creating post')
+    // console.log('Creating post')
     const [soup, soupImg] = getFood(soups)
     const [sand, sandImg] = getFood(sandwiches)
     const imgIn = [soupImg, sandImg]
     const imgOut = await Promise.all([getImg(imgIn[0]), getImg(imgIn[1])])
     await sleep(5000)
-    console.log(`imgOut: ${imgOut}`)
+    // console.log(`imgOut: ${imgOut}`)
     const media_ids = await upload(imgOut)
     await sleep(5000)
-    console.log(`media_ids: ${media_ids}`)
+    // console.log(`media_ids: ${media_ids}`)
 
     const status = `🥣  ${txtFilter(soup.Name)}${
       is.bad(soup.Origin) ? '' : ' [' + txtFilter(soup.Origin) + ']'
@@ -167,9 +166,9 @@ async function post(soups, sandwiches) {
     }`
 
     const res = await M.post('statuses', { status, media_ids })
-    if (/error/.test(res.data)) console.log(res.data)
-    console.log(res.data)
-    return status
+    if (/error/.test(res.data))
+      // console.log(res.data)
+      return status
   } catch (err) {
     throw err
   }
