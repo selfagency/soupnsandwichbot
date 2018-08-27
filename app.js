@@ -1,12 +1,27 @@
-require('dotenv').config()
+require('now-env')
 
 const axios = require('axios')
+const express = require('express')
 const Entities = require('html-entities').XmlEntities
 const fs = require('fs')
 const is = require('typa')
 const Mastodon = require('mastodon-api')
 const striptags = require('striptags')
 const tabletojson = require('tabletojson')
+
+// initialize express
+const app = express()
+app.get('/', async (req, res) => {
+  try {
+    const [soups, sandwiches] = await warmUp()
+    await post(soups, sandwiches)
+    res.send('Success')
+  } catch (err) {
+    res.send(err)
+    throw err
+  }
+})
+app.listen(8082, () => console.log('Listening on port 8082!'))
 
 // initialize html entity converter
 const entities = new Entities()
@@ -155,7 +170,7 @@ async function post(soups, sandwiches) {
     const imgOut = await Promise.all([getImg(imgIn[0]), getImg(imgIn[1])])
     // console.log(`imgOut: ${imgOut}`)
     const media_ids = await upload(imgOut)
-    // console.log(`media_ids: ${media_ids}`)
+    // console.log(`media_ids: ${mediva_ids}`)
 
     const status = `🥣  ${txtFilter(soup.Name)}${
       is.bad(soup.Origin) ? '' : ' [' + txtFilter(soup.Origin) + ']'
@@ -166,19 +181,7 @@ async function post(soups, sandwiches) {
 
     const res = await M.post('statuses', { status, media_ids })
     if (/error/.test(res.data)) console.log(res.data)
-    setTimeout(async () => {
-      await post(soups, sandwiches)
-    }, 43200000)
   } catch (err) {
     throw err
   }
 }
-
-;(async () => {
-  try {
-    const [soups, sandwiches] = await warmUp()
-    await post(soups, sandwiches)
-  } catch (err) {
-    throw err
-  }
-})()

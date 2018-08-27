@@ -16,8 +16,8 @@ module.exports = {
   target: 'node',
   devtool: 'source-map',
   output: {
-    path: path.join(__dirname, 'dist'),
-    filename: './index.js'
+    path: path.join(__dirname, ''),
+    filename: 'index.js'
   },
   module: {
     rules: [
