@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "repository": "https://bitbucket.org/selfagency/soupnsandwichbot/",
   "author": "Daniel Sieradski <daniel@self.agency>",
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "private": false,
   "scripts": {
     "dev": "./node_modules/.bin/ndb ./node_modules/.bin/micro-dev ./index.js",
