@@ -166,9 +166,8 @@ async function post(soups, sandwiches) {
     }`
 
     const res = await M.post('statuses', { status, media_ids })
-    if (/error/.test(res.data))
-      // console.log(res.data)
-      return status
+    if (/error/.test(res.data)) console.log(res.data)
+    return status
   } catch (err) {
     throw err
   }
